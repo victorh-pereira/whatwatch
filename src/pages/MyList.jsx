@@ -97,6 +97,15 @@ export default function MyList() {
         )}
       </div>
 
+      {/* Nota sobre o histórico */}
+      {tab === 'history' && (
+        <p className="mt-4 rounded-lg border border-ww-border bg-ww-surface px-4 py-3 text-xs text-ww-muted">
+          💡 O histórico guarda apenas as visualizações recentes da sua sessão
+          atual. Ele é apagado automaticamente quando você sai da conta — seus
+          favoritos, listas e avaliações continuam salvos.
+        </p>
+      )}
+
       {/* Conteúdo */}
       {loading ? (
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">

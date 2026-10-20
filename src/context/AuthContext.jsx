@@ -85,10 +85,26 @@ export function AuthProvider({ children }) {
   )
 
   const signOut = useCallback(async () => {
+    // Apaga o histórico de visualizações ANTES de encerrar a sessão.
+    //
+    // O histórico é o dado que mais cresce e é o que menos precisa persistir:
+    // vale apenas enquanto a sessão está ativa. Favoritos, listas e avaliações
+    // são preservados.
+    //
+    // A ordem importa: o DELETE precisa do token válido (RLS), então é feito
+    // antes do signOut. Falhas aqui não impedem o logout.
+    if (user?.id) {
+      try {
+        await supabase.from('watch_history').delete().eq('user_id', user.id)
+      } catch {
+        /* não bloqueia o logout */
+      }
+    }
+
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     applySession(null)
-  }, [applySession])
+  }, [applySession, user])
 
   const value = {
     session,
