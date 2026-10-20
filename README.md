@@ -112,15 +112,18 @@ Acesse **http://localhost:5173**.
 
 ## ☁️ Deploy na Vercel
 
-### 1. Suba o projeto para o GitHub
+### 1. Repositório no GitHub
+
+O código já está publicado em:
+
+**https://github.com/victorh-pereira/whatwatch**
+
+Para enviar alterações futuras, use:
 
 ```bash
-git init
 git add .
-git commit -m "feat: WhatWatch"
-git branch -M main
-git remote add origin https://github.com/SEU-USUARIO/whatwatch.git
-git push -u origin main
+git commit -m "descreva a mudança"
+git push
 ```
 
 ### 2. Importe na Vercel
@@ -144,10 +147,15 @@ git push -u origin main
 
 ### 3. (Importante) Autorize o domínio no Supabase
 
-Depois do deploy, a Vercel te dará uma URL (ex.: `https://whatwatch.vercel.app`).
-No painel do Supabase, vá em **Authentication → URL Configuration** e adicione
-essa URL em **Site URL** e em **Redirect URLs**. Sem isso, o login pode falhar
-no site publicado.
+Depois do deploy, a Vercel te dará uma URL (ex.: `https://whatwatch-xxxx.vercel.app`).
+
+No painel do Supabase, vá em **Authentication → URL Configuration**:
+
+1. Em **Site URL**, coloque a URL do site publicado.
+2. Em **Redirect URLs**, adicione a mesma URL.
+
+Sem isso, o login pode falhar no site publicado, pois o Supabase valida o
+domínio de origem por segurança.
 
 ---
 
