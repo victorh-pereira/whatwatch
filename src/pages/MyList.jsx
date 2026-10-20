@@ -100,8 +100,8 @@ export default function MyList() {
       {/* Nota sobre o histórico */}
       {tab === 'history' && (
         <p className="mt-4 rounded-lg border border-ww-border bg-ww-surface px-4 py-3 text-xs text-ww-muted">
-          💡 O histórico guarda apenas as visualizações recentes da sua sessão
-          atual. Ele é apagado automaticamente quando você sai da conta — seus
+          💡 O histórico guarda apenas as visualizações da sua sessão atual. Ele
+          é reiniciado a cada novo login e apagado ao sair da conta — seus
           favoritos, listas e avaliações continuam salvos.
         </p>
       )}

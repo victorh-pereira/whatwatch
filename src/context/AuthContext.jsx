@@ -26,6 +26,27 @@ export function AuthProvider({ children }) {
     setLoading(false)
   }, [])
 
+  /**
+   * Apaga o histórico de visualizações de um usuário no banco.
+   *
+   * Por que o histórico é tratado assim: é o dado que mais cresce e o que menos
+   * precisa persistir — vale apenas enquanto a sessão está ativa. Por isso é
+   * limpo ao ENTRAR e ao SAIR, garantindo histórico "sempre fresco" e evitando
+   * acúmulo no banco. Favoritos, listas e avaliações não são afetados.
+   *
+   * Requer a sessão ativa (token válido) por causa da política de segurança RLS.
+   * Portanto deve ser chamada enquanto o usuário ainda está autenticado.
+   * Falhas não interrompem o fluxo de login/logout.
+   */
+  const clearHistoryFor = useCallback(async (userId) => {
+    if (!userId) return
+    try {
+      await supabase.from('watch_history').delete().eq('user_id', userId)
+    } catch {
+      /* não bloqueia o login/logout */
+    }
+  }, [])
+
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false)
@@ -34,7 +55,10 @@ export function AuthProvider({ children }) {
 
     let active = true
 
-    // Restaura sessão persistida
+    // Restaura sessão persistida.
+    // Obs.: NÃO limpamos o histórico aqui — a limpeza ocorre apenas em um
+    // login explícito (com senha) ou no logout, para não zerar o histórico
+    // a cada recarregamento (F5).
     supabase.auth
       .getSession()
       .then(({ data }) => {
@@ -65,11 +89,14 @@ export function AuthProvider({ children }) {
         password,
       })
       if (error) throw error
+      // Histórico "sempre fresco": zera o histórico a cada novo login.
+      // Feito aqui (e não no listener) porque agora a sessão já está ativa.
+      await clearHistoryFor(data.session?.user?.id)
       // Atualiza a UI imediatamente, sem depender do evento assíncrono
       applySession(data.session)
       return data
     },
-    [applySession]
+    [applySession, clearHistoryFor]
   )
 
   const signUp = useCallback(
@@ -77,7 +104,7 @@ export function AuthProvider({ children }) {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) throw error
       // Se o cadastro já retornar sessão (confirmação de e-mail desativada),
-      // entra direto. Caso contrário, o usuário precisará confirmar o e-mail.
+      // entra direto e o histórico começa vazio (conta nova).
       if (data.session) applySession(data.session)
       return data
     },
@@ -85,26 +112,14 @@ export function AuthProvider({ children }) {
   )
 
   const signOut = useCallback(async () => {
-    // Apaga o histórico de visualizações ANTES de encerrar a sessão.
-    //
-    // O histórico é o dado que mais cresce e é o que menos precisa persistir:
-    // vale apenas enquanto a sessão está ativa. Favoritos, listas e avaliações
-    // são preservados.
-    //
-    // A ordem importa: o DELETE precisa do token válido (RLS), então é feito
-    // antes do signOut. Falhas aqui não impedem o logout.
-    if (user?.id) {
-      try {
-        await supabase.from('watch_history').delete().eq('user_id', user.id)
-      } catch {
-        /* não bloqueia o logout */
-      }
-    }
+    // Apaga o histórico ANTES de encerrar a sessão, pois o DELETE precisa do
+    // token válido (RLS). Falhas aqui não impedem o logout.
+    await clearHistoryFor(user?.id)
 
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     applySession(null)
-  }, [applySession, user])
+  }, [applySession, user, clearHistoryFor])
 
   const value = {
     session,
