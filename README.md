@@ -5,25 +5,48 @@ Netflix: tema escuro, banners em alta qualidade, carrosséis por categoria,
 trailers integrados, elenco, plataformas de streaming (Brasil) e uma biblioteca
 pessoal com favoritos, listas "quero assistir/assistido", avaliações e histórico.
 
+**🌐 Site em produção:** https://whatwatch-tau.vercel.app
+
 ---
 
 ## ✨ Funcionalidades
 
 - **Home dinâmica** — banner com destaques (setas manuais) e carrosséis:
-  vistos recentemente, em alta, novos filmes, novas séries, em breve nos
-  cinemas, populares, melhores avaliados e gêneros variados.
+  vistos recentemente, em alta na semana, novos filmes, novas séries, em breve
+  nos cinemas, populares, melhores avaliados e gêneros variados.
 - **Modal de detalhes** — trailer integrado (PT-BR quando disponível),
   sinopse, ano, classificação indicativa, duração/temporadas, nota, elenco
   principal, plataformas de streaming no Brasil e títulos semelhantes.
 - **Busca dinâmica** — sugestões em tempo real enquanto você digita.
-- **Exploração com filtros** — tipo (tudo/filmes/séries), gênero, ano e
-  ordenação, combináveis entre si.
+- **Exploração com filtros combináveis** — tipo (tudo/filmes/séries), gênero,
+  ano e ordenação:
+  - **Ano**: lista suspensa de 1950 até o ano atual.
+  - **Ordenação**: mais populares, melhor avaliados, mais recentes e maior
+    bilheteria (a ordenação por nota exige um mínimo de votos, evitando títulos
+    obscuros com poucas avaliações).
+  - Botão **Limpar filtros** quando há filtros ativos.
 - **Conta de usuário (Supabase)** — cadastro e login com e-mail e senha,
   sessões persistentes.
 - **Minha Biblioteca** — favoritos, "quero assistir", "assistidos",
   avaliações com estrelas (1 a 5) e histórico de visualizações.
   - Dar uma nota marca o título automaticamente como **assistido**.
   - Marcar como assistido remove o título de "quero assistir".
+  - **Histórico sempre fresco**: é zerado a cada login e apagado ao sair,
+    evitando acúmulo de dados no banco. Favoritos, listas e avaliações são
+    preservados.
+
+---
+
+## 🗺️ Páginas e rotas
+
+| Rota                | Página           | Descrição                                        |
+| ------------------- | ---------------- | ------------------------------------------------ |
+| `/`                 | Home             | Banner de destaque e carrosséis por categoria    |
+| `/busca`            | Explorar / Busca | Busca com sugestões e filtros combináveis        |
+| `/minha-biblioteca` | Minha Biblioteca | Favoritos, listas, avaliações e histórico        |
+
+> O modal de detalhes abre como **overlay** sobre qualquer página, sem trocar
+> de rota.
 
 ---
 
@@ -37,6 +60,7 @@ pessoal com favoritos, listas "quero assistir/assistido", avaliações e histór
 | Dados         | [TMDB API](https://www.themoviedb.org/)     |
 | Autenticação  | [Supabase](https://supabase.com/)           |
 | Banco         | PostgreSQL (Supabase) com Row Level Security |
+| Deploy        | Vercel (com deploy automático via GitHub)   |
 
 ---
 
@@ -112,13 +136,18 @@ Acesse **http://localhost:5173**.
 
 ## ☁️ Deploy na Vercel
 
-### 1. Repositório no GitHub
+### 🟢 Situação atual
 
-O código já está publicado em:
+O projeto **já está publicado** e com **deploy automático** configurado:
 
-**https://github.com/victorh-pereira/whatwatch**
+- **Site:** https://whatwatch-tau.vercel.app
+- **Repositório:** https://github.com/victorh-pereira/whatwatch
+- **Branch de produção:** `main`
 
-Para enviar alterações futuras, use:
+A cada `git push` na branch `main`, a Vercel detecta a mudança e publica
+automaticamente em produção (~20 segundos).
+
+### 📤 Publicando alterações
 
 ```bash
 git add .
@@ -126,13 +155,29 @@ git commit -m "descreva a mudança"
 git push
 ```
 
-### 2. Importe na Vercel
+Pronto — a Vercel cuida do build e do deploy sozinha. Não é preciso rodar
+nenhum comando manual.
 
-1. Acesse [vercel.com](https://vercel.com) e entre com a conta do GitHub.
-2. Clique em **Add New → Project** e selecione o repositório `whatwatch`.
-3. A Vercel detecta o Vite automaticamente.
-4. **Antes de clicar em Deploy**, adicione as variáveis de ambiente em
-   **Environment Variables**:
+### 🔧 Configurando o deploy do zero (referência)
+
+Caso precise recriar o projeto em outra conta/repositório:
+
+1. **GitHub** — crie o repositório e envie o código:
+
+   ```bash
+   git init
+   git add .
+   git commit -m "feat: WhatWatch"
+   git branch -M main
+   git remote add origin https://github.com/SEU-USUARIO/whatwatch.git
+   git push -u origin main
+   ```
+
+2. **Vercel** — acesse [vercel.com](https://vercel.com), entre com o GitHub e
+   clique em **Add New → Project**, selecionando o repositório `whatwatch`.
+   A Vercel detecta o Vite automaticamente.
+
+3. **Variáveis de ambiente** — em **Environment Variables**, adicione:
 
    | Nome                     | Valor                          |
    | ------------------------ | ------------------------------ |
@@ -140,22 +185,27 @@ git push
    | `VITE_SUPABASE_URL`      | URL do seu projeto Supabase    |
    | `VITE_SUPABASE_ANON_KEY` | sua chave pública do Supabase  |
 
-5. Clique em **Deploy**. Em cerca de 1 minuto seu site estará no ar. 🎉
+4. Clique em **Deploy**. Em cerca de 1 minuto o site estará no ar. 🎉
 
 > O arquivo `vercel.json` já está incluído com a configuração de rotas (SPA),
 > então links como `/busca` funcionam ao recarregar a página.
 
-### 3. (Importante) Autorize o domínio no Supabase
-
-Depois do deploy, a Vercel te dará uma URL (ex.: `https://whatwatch-xxxx.vercel.app`).
+### 🔑 Autorize o domínio no Supabase (importante)
 
 No painel do Supabase, vá em **Authentication → URL Configuration**:
 
 1. Em **Site URL**, coloque a URL do site publicado.
-2. Em **Redirect URLs**, adicione a mesma URL.
+2. Em **Redirect URLs**, adicione a mesma URL (e `http://localhost:5173/**`
+   para o desenvolvimento local).
 
-Sem isso, o login pode falhar no site publicado, pois o Supabase valida o
-domínio de origem por segurança.
+Sem isso, o **login falha no site publicado**, pois o Supabase valida o domínio
+de origem por segurança.
+
+### ⚠️ Desative a proteção de deployment
+
+Se o site pedir login da Vercel para ser visitado, verifique em
+**Project Settings → Deployment Protection** se a opção **Vercel
+Authentication** está ativa. Para um site público, ela deve estar **desligada**.
 
 ---
 
@@ -178,6 +228,35 @@ whatwatch/
 ├─ vercel.json              configuração de deploy (SPA)
 └─ vite.config.js
 ```
+
+---
+
+## 🧠 Notas técnicas
+
+Detalhes de implementação que resolvem problemas específicos da API do TMDB e
+do SDK do Supabase:
+
+- **Tipo de mídia seguro** — uma função `resolveMediaType` normaliza o tipo
+  (`movie`/`tv`) de qualquer item, evitando requisições para
+  `/movie/undefined`.
+- **Trailers** — busca vídeos em `pt` e `en-US` e remove duplicados por `key`,
+  priorizando o trailer em português.
+- **Plataformas de streaming** — o parâmetro `append_to_response` não retorna
+  os provedores; por isso é usado o endpoint dedicado
+  `/{type}/{id}/watch/providers` (região **BR**).
+- **Novos filmes/séries** — usa `/discover` com filtro de data (últimos 90
+  dias), em vez de `now_playing`/`on_the_air`, que trazem conteúdo desatualizado.
+- **Filtro de ano** — o TMDB exige parâmetros diferentes por tipo:
+  `primary_release_year` (filmes) e `first_air_date_year` (séries). Na busca
+  com texto, gênero e ano são filtrados no cliente, pois `/search` não os
+  suporta nativamente.
+- **Login confiável** — o SDK do Supabase usa `navigator.locks` internamente,
+  que em certos cenários pode travar e impedir a UI de reconhecer o login. O
+  cliente usa um lock em memória e o `AuthContext` aplica a sessão diretamente
+  a partir do retorno de `signIn`, sem depender apenas do evento assíncrono.
+- **Histórico sempre fresco** — o histórico de visualizações é apagado ao
+  **login** e ao **logout** (sempre com a sessão ativa, para respeitar a RLS),
+  mantendo o banco leve. Favoritos, listas e avaliações são preservados.
 
 ---
 
